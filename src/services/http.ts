@@ -1,7 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { isEmpty } from 'lodash';
-import { Session } from 'next-auth';
-import { getSession } from 'next-auth/react';
 // Default config options
 const defaultOptions: AxiosRequestConfig = {
   baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}`,
@@ -19,16 +17,7 @@ const defaultOptions: AxiosRequestConfig = {
 const instance = axios.create(defaultOptions);
 
 instance.interceptors.request.use(
-  async (config: AxiosRequestConfig) => {
-    const session = (await getSession()) as Session;
-    if (session?.accessToken && !config.url?.startsWith('/auth')) {
-      //Don't send token for refresh tokens route
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      config.headers.Authorization = `Bearer ${session?.accessToken}`;
-    }
-    return config;
-  },
+  async (config: AxiosRequestConfig) => config,
   error => Promise.reject(error)
 );
 // Add a response interceptor
@@ -36,11 +25,6 @@ instance.interceptors.response.use(
   response => response.data,
   error => {
     if (error === null) throw new Error('Unrecoverable error!! Error is null!');
-
-    /*    const errorResponse = error?.response;
-    const request = error?.request;
-    const config = error?.config;
-    const statusCode = errorResponse?.status;*/
 
     if (error.response) {
       if (error.code === 'ECONNABORTED')
